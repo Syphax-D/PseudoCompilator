@@ -141,11 +141,12 @@ TABLE_IDENT = TableIdentificateurs()
 # 5. FONCTIONS DE L'ANALYSEUR LEXICAL
 
 def ERREUR(type_erreur: TYPE_ERREUR, message: str):
-    """Affiche un message d'erreur typé avec le numéro de ligne."""
-    global NUM_LIGNE
-    print(f"\nERREUR {type_erreur.value} LIGNE {NUM_LIGNE}: {message}", file=sys.stderr)
-    sys.exit(1)
 
+    global NUM_LIGNE
+
+    print(f"\nERREUR {type_erreur.value} LIGNE {NUM_LIGNE}")
+
+    sys.exit(1)
 
 def LIRE_CAR():
     global SOURCE, CARLU, NUM_LIGNE
@@ -431,9 +432,9 @@ def TERMINER():
     
 #     TERMINER()
 
-# =========================
+
 # PARTIE 3 : SYNTAXE / SEMANTIQUE / GEN CODE / INTERPRETEUR
-# =========================
+
 
 from dataclasses import dataclass
 
@@ -470,6 +471,20 @@ class TableSymboles:
     def items_tries(self):
         for k in sorted(self.map.keys()):
             yield self.map[k]
+
+def afficher_table_symboles():
+
+    print("\n" + "="*60)
+    print("TABLE DES SYMBOLES")
+    print("="*60)
+
+    print(f"{'Nom':<10}{'Genre':<10}{'Type':<10}{'Adr':<6}{'Val'}")
+
+    for s in SYM.items_tries():
+
+        typ = "ENTIER" if s.typc == 0 else "CHAINE"
+
+        print(f"{s.nom:<10}{s.genre:<10}{typ:<10}{s.adr:<6}{s.val}")
 
 
 # ---------------------------------------------------------
@@ -922,6 +937,43 @@ def creer_fichier_code(nom_prog: str, fichier_source: str):
 # 9) INTERPRETEUR MACHINE VIRTUELLE
 # ---------------------------------------------------------
 
+def afficher_pcode():
+
+    print("\n" + "="*60)
+    print("P_CODE GENERE")
+    print("="*60)
+
+    i = 0
+
+    while i < len(P_CODE):
+
+        op = P_CODE[i]
+        nom = OPNAME.get(op, str(op))
+
+        if op == OP.EMPI:
+
+            print(nom, P_CODE[i+1])
+            i += 2
+
+        elif op == OP.ECRC:
+
+            texte = ""
+            i += 1
+
+            while P_CODE[i] != OP.FINC:
+
+                texte += chr(P_CODE[i])
+                i += 1
+
+            print("ECRC", texte)
+
+            i += 1
+
+        else:
+
+            print(nom)
+            i += 1
+
 def interpreter():
     # mémoire variables globales
     nb_vars = DERNIERE_ADRESSE_VAR_GLOB + 1
@@ -1065,15 +1117,88 @@ def compiler_et_executer(fichier_source: str, executer=True, generer_cod=True):
     print("\n[OK] Compilation terminée.")
 
 
-# ---------------------------------------------------------
-# Exemple d'appel (à adapter)
-# ---------------------------------------------------------
-# if __name__ == "__main__":
-#     compiler_et_executer(r"C:\Users\User\PseudoCompilator\Code.minipascal", executer=True, generer_cod=True)
+
 
 if __name__ == "__main__":
+
+    CHEMIN_SOURCE = r"C:\Users\User\PseudoCompilator\Code.minipascal"
+
+    print("\n================ ANALYSE LEXICALE ================\n")
+
+    INITIALISER(CHEMIN_SOURCE)
+
+    print(f"{'LIGNE':<8} {'TOKEN':<15} {'VALEUR'}")
+    print("-"*50)
+
+    while True:
+
+        tok = ANALEX()
+
+        if tok is None:
+            break
+
+        if tok == T_UNILEX.motcle:
+            print(NUM_LIGNE, " MOTCLE ", CHAINE)
+
+        elif tok == T_UNILEX.ident:
+            print(NUM_LIGNE, " IDENT ", CHAINE)
+
+        elif tok == T_UNILEX.ent:
+            print(NUM_LIGNE, " ENT ", NOMBRE)
+
+        elif tok == T_UNILEX.ch:
+            print(NUM_LIGNE, " CH ", CHAINE)
+
+        elif tok == T_UNILEX.aff:
+            print(NUM_LIGNE, " :=")
+
+        elif tok == T_UNILEX.plus:
+            print(NUM_LIGNE, " +")
+
+        elif tok == T_UNILEX.mult:
+            print(NUM_LIGNE, " *")
+
+        elif tok == T_UNILEX.ptvirg:
+            print(NUM_LIGNE, " ;")
+
+        elif tok == T_UNILEX.virg:
+            print(NUM_LIGNE, " ,")
+
+        elif tok == T_UNILEX.parouv:
+            print(NUM_LIGNE, " (")
+
+        elif tok == T_UNILEX.parfer:
+            print(NUM_LIGNE, " )")
+
+        elif tok == T_UNILEX.point:
+            print(NUM_LIGNE, " .")
+            break
+
+    TERMINER()
+
+
+    print("\n================ COMPILATION =================\n")
+
     compiler_et_executer(
-        r"C:\Users\User\PseudoCompilator\Code.minipascal",
-        executer=True,
+        CHEMIN_SOURCE,
+        executer=False,
         generer_cod=True
     )
+
+
+    print("\n================ TABLE DES SYMBOLES =================\n")
+
+    afficher_table_symboles()
+
+
+    print("\n================ P_CODE =================\n")
+
+    afficher_pcode()
+
+
+    print("\n================ EXECUTION =================\n")
+
+    interpreter()
+
+
+    print("\n================ FIN =================\n")
