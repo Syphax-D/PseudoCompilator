@@ -1,7 +1,7 @@
 PROGRAMME myApp; {tgggfk}
 CONST
 	x = 'a',
-	b = 233;
+	b = 233; 
 VAR
 	z, t;
 DEBUT

@@ -1,0 +1,17 @@
+2
+ECRC Type a number:  FINC
+EMPI 1
+LIRE
+EMPI 0
+EMPI 1
+CONT
+EMPI 233
+EMPI 2
+MULT
+MULT
+AFFE
+ECRC Your number multiplied by 4 is:  FINC
+EMPI 0
+CONT
+ECRE
+STOP
