@@ -7,7 +7,7 @@ from enum import Enum
 # 1. TYPES
 
 class T_UNILEX(Enum):
-    """Énumération des unités lexicales du langage mini-Pascal"""
+    # Enumération des unités lexicales du langage mini-Pascal
     motcle = 1
     ident = 2
     ent = 3
@@ -60,12 +60,6 @@ class TableIdentificateurs:
         self.entrees = []  # Liste triée de pointeurs vers EntreeIdent
     
     def _recherche_dichotomique(self, nom: str):
-        """
-        Recherche dichotomique interne.
-        Retourne: (trouve, position)
-          - trouve: True si l'identificateur existe
-          - position: index où insérer si non trouvé
-        """
         gauche = 0
         droite = len(self.entrees) - 1
         
@@ -427,7 +421,7 @@ def TERMINER():
 #     print("Analyse lexicale terminée avec succès")
 #     print("~" * 70)
     
-#     # === AFFICHAGE DE LA TABLE DES IDENTIFICATEURS===
+#     # ~~~~AFFICHAGE DE LA TABLE DES IDENTIFICATEURS~~~~
 #     TABLE_IDENT.afficher()
     
 #     TERMINER()
@@ -438,9 +432,8 @@ def TERMINER():
 
 from dataclasses import dataclass
 
-# ---------------------------------------------------------
-# 1) TABLE DES SYMBOLES (on enrichit ton EntreeIdent)
-# ---------------------------------------------------------
+# TABLE DES SYMBOLES (on enrichit ton EntreeIdent)
+
 
 @dataclass
 class Symbole:
@@ -452,12 +445,8 @@ class Symbole:
 
 
 class TableSymboles:
-    """
-    Version simple: dictionnaire (plus simple pour la sémantique).
-    Tu peux garder ta table triée en parallèle si tu veux l'affichage.
-    """
     def __init__(self):
-        self.map = {}  # nom -> Symbole
+        self.map = {}
 
     def existe(self, nom: str) -> bool:
         return nom in self.map
@@ -487,9 +476,8 @@ def afficher_table_symboles():
         print(f"{s.nom:<10}{s.genre:<10}{typ:<10}{s.adr:<6}{s.val}")
 
 
-# ---------------------------------------------------------
-# 2) OPCODES MACHINE VIRTUELLE
-# ---------------------------------------------------------
+# OPCODES
+
 
 class OP:
     ADDI = 0
@@ -514,33 +502,28 @@ OPNAME = {
 }
 
 
-# ---------------------------------------------------------
-# 3) VARIABLES GLOBALES PARTIE 3
-# ---------------------------------------------------------
+# VARIABLES GLOBALES PARTIE
 
-UNILEX = None  # dernier token (T_UNILEX)
+
+UNILEX = None
 SYM = TableSymboles()
 
-DERNIERE_ADRESSE_VAR_GLOB = -1  # commence à -1, première var -> 0
+DERNIERE_ADRESSE_VAR_GLOB = -1
 
-VAL_DE_CONST_CHAINE = [""]  # on met un dummy en position 0 (optionnel)
+VAL_DE_CONST_CHAINE = [""]
 NB_CONST_CHAINE = 0
 
-P_CODE = []     # code machine (liste d'entiers)
-PILOP = []      # pile d'opérateurs (stocke des opcodes OP.ADDI etc.)
+P_CODE = []
+PILOP = []
 
-# Pour écrire un fichier .COD (optionnel)
 NOM_FICHIER_SOURCE = ""
 
 
-# ---------------------------------------------------------
-# 4) OUTILS PARSER
-# ---------------------------------------------------------
+# OUTILS PARSER
 
 def avancer():
     global UNILEX
     UNILEX = ANALEX()
-    # si fin de fichier atteinte
     if UNILEX is None:
         UNILEX = T_UNILEX.point
         
@@ -551,10 +534,6 @@ def erreur_sem(msg: str):
     ERREUR(TYPE_ERREUR.SEMANTIQUE, msg)
 
 def attendre(tok: T_UNILEX, valeur_motcle: str | None = None):
-    """
-    Consomme le token attendu, sinon erreur.
-    Pour un mot-clé: attendre(T_UNILEX.motcle, "PROGRAMME")
-    """
     global UNILEX, CHAINE
     if UNILEX != tok:
         erreur_syn(f"{tok.name} attendu, trouvé {UNILEX.name}")
@@ -567,9 +546,7 @@ def est_motcle(m: str) -> bool:
     return UNILEX == T_UNILEX.motcle and CHAINE == m
 
 
-# ---------------------------------------------------------
-# 5) GENERATION DE CODE
-# ---------------------------------------------------------
+# GENERATION DE CODE
 
 def emit(op: int):
     P_CODE.append(op)
@@ -579,19 +556,13 @@ def emit_op_arg(op: int, arg: int):
     P_CODE.append(arg)
 
 def emit_ecrc_string(s: str):
-    """
-    ECRC + codes ASCII + FINC
-    Interpréteur lira jusqu'à FINC.
-    """
     emit(OP.ECRC)
     for ch in s:
         P_CODE.append(ord(ch))
     emit(OP.FINC)
 
 
-# ---------------------------------------------------------
-# 6) SEMANTIQUE : helpers
-# ---------------------------------------------------------
+# SEMANTIQUE
 
 def definir_constante(nom: str, token_val: T_UNILEX):
     global NB_CONST_CHAINE, VAL_DE_CONST_CHAINE
@@ -603,7 +574,6 @@ def definir_constante(nom: str, token_val: T_UNILEX):
         SYM.ajouter(Symbole(nom=nom, genre="const", typc=0, val=NOMBRE))
     elif token_val == T_UNILEX.ch:
         NB_CONST_CHAINE += 1
-        # index = NB_CONST_CHAINE
         VAL_DE_CONST_CHAINE.append(CHAINE)
         SYM.ajouter(Symbole(nom=nom, genre="const", typc=1, val=NB_CONST_CHAINE))
     else:
@@ -631,17 +601,15 @@ def exiger_decl(nom: str) -> Symbole:
     return s
 
 def exiger_entier(sym: Symbole, contexte: str):
-    # dans le mini-pascal du poly, les variables sont entières.
     if sym.typc != 0:
         erreur_sem(f"type incompatible ({contexte}) : {sym.nom} n'est pas entier")
 
 
-# ---------------------------------------------------------
-# 7) PARSER : grammaire G0 (descente récursive)
-# ---------------------------------------------------------
+# PARSER
+
 
 def PROG():
-    # PROG -> PROGRAMME IDENT ; [DECL_CONST] [DECL_VAR] BLOC .
+    # PROG ==> PROGRAMME IDENT ; [DECL_CONST] [DECL_VAR] BLOC .
     attendre(T_UNILEX.motcle, "PROGRAMME")
 
     if UNILEX != T_UNILEX.ident:
@@ -661,13 +629,12 @@ def PROG():
 
     attendre(T_UNILEX.point)
 
-    # à la fin: stop machine
     emit(OP.STOP)
 
     return nom_prog
 
 def DECL_CONST():
-    # DECL_CONST -> CONST IDENT = (ENT|CH) { , IDENT = (ENT|CH) } ;
+    # DECL_CONST ==> CONST IDENT = (ENT,CH) { , IDENT = (ENT,CH) } ;
     attendre(T_UNILEX.motcle, "CONST")
 
     if UNILEX != T_UNILEX.ident:
@@ -682,7 +649,6 @@ def DECL_CONST():
         if UNILEX not in (T_UNILEX.ent, T_UNILEX.ch):
             erreur_syn("ENT ou CH attendu dans déclaration de constante")
         token_val = UNILEX
-        # definir_constante utilise NOMBRE/CHAINE (globaux lexer)
         definir_constante(nom, token_val)
         avancer()
 
@@ -696,7 +662,7 @@ def DECL_CONST():
     attendre(T_UNILEX.ptvirg)
 
 def DECL_VAR():
-    # DECL_VAR -> VAR IDENT { , IDENT } ;
+    # DECL_VAR ==> VAR IDENT { , IDENT } ;
     attendre(T_UNILEX.motcle, "VAR")
 
     if UNILEX != T_UNILEX.ident:
@@ -717,14 +683,13 @@ def DECL_VAR():
     attendre(T_UNILEX.ptvirg)
 
 def BLOC():
-    # BLOC -> DEBUT INSTRUCTION { ; INSTRUCTION } FIN
+    # BLOC ==> DEBUT INSTRUCTION { ; INSTRUCTION } FIN
     attendre(T_UNILEX.motcle, "DEBUT")
 
     INSTRUCTION()
 
     while UNILEX == T_UNILEX.ptvirg:
         avancer()
-        # autoriser "DEBUT ... ; FIN" ? (selon prof)
         if est_motcle("FIN"):
             break
         INSTRUCTION()
@@ -732,7 +697,7 @@ def BLOC():
     attendre(T_UNILEX.motcle, "FIN")
 
 def INSTRUCTION():
-    # INSTRUCTION -> AFFECTATION | LECTURE | ECRITURE | BLOC
+    # INSTRUCTION ==> AFFECTATION , LECTURE , ECRITURE , BLOC
     if UNILEX == T_UNILEX.ident:
         AFFECTATION()
     elif est_motcle("LIRE"):
@@ -745,15 +710,14 @@ def INSTRUCTION():
         erreur_syn("instruction attendue (IDENT, LIRE, ECRIRE ou DEBUT)")
 
 def AFFECTATION():
-    # AFFECTATION -> IDENT := EXP
+    # AFFECTATION ==> IDENT := EXP
     if UNILEX != T_UNILEX.ident:
         erreur_syn("identificateur attendu en affectation")
 
     nom = CHAINE
-    s = exiger_var(nom)         # sémantique: doit être var déclarée
+    s = exiger_var(nom)
     exiger_entier(s, "affectation")
 
-    # génération : empiler l'adresse de la var
     emit_op_arg(OP.EMPI, s.adr)
 
     avancer()
@@ -766,7 +730,7 @@ def AFFECTATION():
     emit(OP.AFFE)
 
 def LECTURE():
-    # LECTURE -> LIRE ( IDENT { , IDENT } )
+    # LECTURE ==> LIRE ( IDENT { , IDENT } )
     attendre(T_UNILEX.motcle, "LIRE")
     attendre(T_UNILEX.parouv)
 
@@ -778,7 +742,6 @@ def LECTURE():
         s = exiger_var(nom)
         exiger_entier(s, "lecture")
 
-        # gen: EMPI adr ; LIRE
         emit_op_arg(OP.EMPI, s.adr)
         emit(OP.LIRE)
 
@@ -793,7 +756,7 @@ def LECTURE():
     attendre(T_UNILEX.parfer)
 
 def ECRITURE():
-    # ECRITURE -> ECRIRE ( [ECR_EXP { , ECR_EXP }] )
+    # ECRITURE ==> ECRIRE ( [ECR_EXP { , ECR_EXP }] )
     attendre(T_UNILEX.motcle, "ECRIRE")
     attendre(T_UNILEX.parouv)
 
@@ -811,32 +774,26 @@ def ECRITURE():
     attendre(T_UNILEX.parfer)
 
 def ECR_EXP():
-    # ECR_EXP -> EXP | CH
+    # ECR_EXP ==> EXP , CH
     if UNILEX == T_UNILEX.ch:
-        # gen string
         emit_ecrc_string(CHAINE)
         avancer()
     else:
-        # EXP (doit être entier)
         EXP()
         emit(OP.ECRE)
 
 def EXP():
-    # EXP -> TERME SUITE_TERME
     TERME()
     SUITE_TERME()
 
 def SUITE_TERME():
-    # SUITE_TERME -> ε | OP_BIN EXP
     if UNILEX in (T_UNILEX.plus, T_UNILEX.moins, T_UNILEX.mult, T_UNILEX.divi):
         OP_BIN()
         EXP()
-        # à la fin, dépiler l'opérateur et l'émettre (postfix)
         op = PILOP.pop()
         emit(op)
 
 def OP_BIN():
-    # empile l'opérateur sur PILOP
     if UNILEX == T_UNILEX.plus:
         PILOP.append(OP.ADDI)
     elif UNILEX == T_UNILEX.moins:
@@ -850,7 +807,7 @@ def OP_BIN():
     avancer()
 
 def TERME():
-    # TERME -> ENT | IDENT | ( EXP ) | - TERME
+    # TERME ==> ENT , IDENT , ( EXP ) , - TERME
     if UNILEX == T_UNILEX.ent:
         emit_op_arg(OP.EMPI, NOMBRE)
         avancer()
@@ -859,15 +816,12 @@ def TERME():
     if UNILEX == T_UNILEX.ident:
         nom = CHAINE
         s = exiger_decl(nom)
-        # sémantique: dans les expressions arithmétiques, il faut un entier
         exiger_entier(s, "expression")
 
         if s.genre == "var":
-            # push address ; CONT => push value
             emit_op_arg(OP.EMPI, s.adr)
             emit(OP.CONT)
         else:
-            # constante entière : on empile directement sa valeur
             emit_op_arg(OP.EMPI, s.val)
 
         avancer()
@@ -889,14 +843,11 @@ def TERME():
     erreur_syn("terme attendu (ENT, IDENT, '(', ou '-')")
 
 
-# ---------------------------------------------------------
-# 8) FICHIER .COD (optionnel)
-# ---------------------------------------------------------
+#é FICHIER .COD
+
 
 def creer_fichier_code(nom_prog: str, fichier_source: str):
-    """
-    Écrit un fichier .COD lisible (mnemonics).
-    """
+    
     base = fichier_source
     if base.lower().endswith(".mp") or base.lower().endswith(".minipascal") or base.lower().endswith(".txt"):
         base = base.rsplit(".", 1)[0]
@@ -904,8 +855,8 @@ def creer_fichier_code(nom_prog: str, fichier_source: str):
 
     i = 0
     with open(path, "w", encoding="utf-8") as f:
-        # 1 mot réservé pour les variables globales (comme dans le poly)
-        # ici: nb de variables = DERNIERE_ADRESSE_VAR_GLOB + 1
+        # 1 mot réservé pour les variables globales
+        #nb de variables = DERNIERE_ADRESSE_VAR_GLOB + 1
         nb_vars = DERNIERE_ADRESSE_VAR_GLOB + 1
         f.write(f"{nb_vars}\n")
 
@@ -918,14 +869,14 @@ def creer_fichier_code(nom_prog: str, fichier_source: str):
                 f.write(f"{name} {arg}\n")
                 i += 2
             elif op == OP.ECRC:
-                # écrire en format: ECRC '...' FINC
+                # écrire en format: ECRC / FINC
                 f.write("ECRC ")
                 i += 1
                 while i < len(P_CODE) and P_CODE[i] != OP.FINC:
                     f.write(chr(P_CODE[i]))
                     i += 1
                 f.write(" FINC\n")
-                i += 1  # sauter FINC
+                i += 1
             else:
                 f.write(f"{name}\n")
                 i += 1
@@ -933,9 +884,8 @@ def creer_fichier_code(nom_prog: str, fichier_source: str):
     print(f"[OK] Fichier code généré: {path}")
 
 
-# ---------------------------------------------------------
-# 9) INTERPRETEUR MACHINE VIRTUELLE
-# ---------------------------------------------------------
+# INTERPRETEUR MACHINE VIRTUELLE
+
 
 def afficher_pcode():
 
@@ -1051,7 +1001,7 @@ def interpreter():
             try:
                 v = int(input())
             except ValueError:
-                raise RuntimeError("entrée invalide (entier attendu)")
+                raise RuntimeError("entrée invalide")
             MEMVAR[adr] = v
             co += 1
 
@@ -1069,7 +1019,7 @@ def interpreter():
             while P_CODE[co] != OP.FINC:
                 print(chr(P_CODE[co]), end="")
                 co += 1
-            co += 1  # sauter FINC
+            co += 1
 
         elif op == OP.STOP:
             break
@@ -1078,9 +1028,9 @@ def interpreter():
             raise RuntimeError(f"opcode inconnu: {op}")
 
 
-# ---------------------------------------------------------
-# 10) POINT D'ENTREE COMPILATION + EXECUTION
-# ---------------------------------------------------------
+
+# POINT D'ENTREE COMPILATION + EXECUTION
+
 
 def compiler_et_executer(fichier_source: str, executer=True, generer_cod=True):
     global NOM_FICHIER_SOURCE, SYM, DERNIERE_ADRESSE_VAR_GLOB, VAL_DE_CONST_CHAINE, NB_CONST_CHAINE
@@ -1088,7 +1038,7 @@ def compiler_et_executer(fichier_source: str, executer=True, generer_cod=True):
 
     NOM_FICHIER_SOURCE = fichier_source
 
-    # reset
+    # reint
     SYM = TableSymboles()
     DERNIERE_ADRESSE_VAR_GLOB = -1
     VAL_DE_CONST_CHAINE = [""]
@@ -1099,7 +1049,7 @@ def compiler_et_executer(fichier_source: str, executer=True, generer_cod=True):
 
     # init lexer
     INITIALISER(fichier_source)
-    avancer()  # UNILEX = premier token
+    avancer()  # UNILEX = 1er token
 
     # parse + gen code
     nom_prog = PROG()
@@ -1114,7 +1064,7 @@ def compiler_et_executer(fichier_source: str, executer=True, generer_cod=True):
     if executer:
         interpreter()
 
-    print("\n[OK] Compilation terminée.")
+    print("\nCompilation terminée.")
 
 
 
@@ -1123,7 +1073,7 @@ if __name__ == "__main__":
 
     CHEMIN_SOURCE = r"../compilation/Code.minipascal"
 
-    print("\n~~~~~~~~ ANALYSE LEXICALE ~~~~~~~~~~~~\n")
+    print("\n~~~~~~~~~~~~~ Analyse lexicale ~~~~~~~~~~~~~\n")
 
     INITIALISER(CHEMIN_SOURCE)
 
@@ -1177,7 +1127,6 @@ if __name__ == "__main__":
     TERMINER()
 
 
-    print("\n~~~~~~~~ COMPILATION ~~~~~~~~~\n")
 
     compiler_et_executer(
         CHEMIN_SOURCE,
@@ -1186,19 +1135,19 @@ if __name__ == "__main__":
     )
 
 
-    print("\n~~~~~~~~ TABLE DES SYMBOLES ~~~~~~~~\n")
+    print("\n~~~~~~~~~~~~~ Table des symboles ~~~~~~~~~~~~~~\n")
 
     afficher_table_symboles()
 
 
-    print("\n~~~~~~~~ P_CODE ~~~~~~~~\n")
+    print("\n~~~~~~~~~~~~~ P_CODE ~~~~~~~~~~~~~~\n")
 
     afficher_pcode()
 
 
-    print("\n~~~~~~~~ EXECUTION ~~~~~~~~\n")
+    print("\n~~~~~~~~~~~~~ Execution ~~~~~~~~~~~~~~\n")
 
     interpreter()
 
 
-    print("\n~~~~~~~~ FIN ~~~~~~~~\n")
+    print("\n~~~~~~~~~~~~~ FIN ~~~~~~~~~~~~~~\n")
