@@ -1123,7 +1123,7 @@ if __name__ == "__main__":
 
     CHEMIN_SOURCE = r"../compilation/Code.minipascal"
 
-    print("\n================ ANALYSE LEXICALE ================\n")
+    print("\n~~~~~~~~ ANALYSE LEXICALE ~~~~~~~~~~~~\n")
 
     INITIALISER(CHEMIN_SOURCE)
 
@@ -1177,7 +1177,7 @@ if __name__ == "__main__":
     TERMINER()
 
 
-    print("\n================ COMPILATION =================\n")
+    print("\n~~~~~~~~ COMPILATION ~~~~~~~~~\n")
 
     compiler_et_executer(
         CHEMIN_SOURCE,
@@ -1186,19 +1186,19 @@ if __name__ == "__main__":
     )
 
 
-    print("\n================ TABLE DES SYMBOLES =================\n")
+    print("\n~~~~~~~~ TABLE DES SYMBOLES ~~~~~~~~\n")
 
     afficher_table_symboles()
 
 
-    print("\n================ P_CODE =================\n")
+    print("\n~~~~~~~~ P_CODE ~~~~~~~~\n")
 
     afficher_pcode()
 
 
-    print("\n================ EXECUTION =================\n")
+    print("\n~~~~~~~~ EXECUTION ~~~~~~~~\n")
 
     interpreter()
 
 
-    print("\n================ FIN =================\n")
+    print("\n~~~~~~~~ FIN ~~~~~~~~\n")
