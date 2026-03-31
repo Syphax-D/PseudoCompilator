@@ -41,7 +41,7 @@ class TYPE_ERREUR(Enum):
 
 LONG_MAX_IDENT = 20      # Longueur maximale d'un identificateur
 LONG_MAX_CHAINE = 50     # Longueur maximale d'une chaîne de caractères
-NB_MOTS_RESERVES = 7     # Nombre de mots-clés réservés
+NB_MOTS_RESERVES = 12     # Nombre de mots-clés réservés
 MAXINT = 32767           # Valeur maximale pour un entier (16 bits)
 
 
@@ -120,12 +120,17 @@ NUM_LIGNE = 1
 
 # Tableau des mots-clés réservés
 TABLE_MOTS_RESERVES = [
+    'ALORS',
     'CONST',
     'DEBUT',
     'ECRIRE',
+    'FAIRE',
     'FIN',
     'LIRE',
     'PROGRAMME',
+    'SI',
+    'SINON',
+    'TANTQUE',
     'VAR'
 ]
 
@@ -494,11 +499,14 @@ class OP:
     EMPI = 11
     CONT = 12
     STOP = 13
+    ALLE = 14
+    ALSN = 15
 
 OPNAME = {
     OP.ADDI: "ADDI", OP.SOUS: "SOUS", OP.MULT: "MULT", OP.DIVI: "DIVI", OP.MOIN: "MOIN",
     OP.AFFE: "AFFE", OP.LIRE: "LIRE", OP.ECRL: "ECRL", OP.ECRE: "ECRE",
-    OP.ECRC: "ECRC", OP.FINC: "FINC", OP.EMPI: "EMPI", OP.CONT: "CONT", OP.STOP: "STOP"
+    OP.ECRC: "ECRC", OP.FINC: "FINC", OP.EMPI: "EMPI", OP.CONT: "CONT", OP.STOP: "STOP",
+    OP.ALLE: "ALLE", OP.ALSN: "ALSN"
 }
 
 
@@ -697,7 +705,12 @@ def BLOC():
     attendre(T_UNILEX.motcle, "FIN")
 
 def INSTRUCTION():
-    # INSTRUCTION ==> AFFECTATION , LECTURE , ECRITURE , BLOC
+    if est_motcle("SI"):
+        INST_COND()
+    else:
+        INST_NON_COND()
+
+def INST_NON_COND():
     if UNILEX == T_UNILEX.ident:
         AFFECTATION()
     elif est_motcle("LIRE"):
@@ -706,8 +719,74 @@ def INSTRUCTION():
         ECRITURE()
     elif est_motcle("DEBUT"):
         BLOC()
+    elif est_motcle("TANTQUE"):
+        INST_REPE()
     else:
-        erreur_syn("instruction attendue (IDENT, LIRE, ECRIRE ou DEBUT)")
+        erreur_syn("instruction attendue (IDENT, LIRE, ECRIRE, DEBUT ou TANTQUE)")
+
+        def INST_REPE():
+    # mémoriser l'adresse de début dans PILOP
+    PILOP.append(len(P_CODE))
+
+    attendre(T_UNILEX.motcle, "TANTQUE")
+
+    # génère le code de la condition
+    EXP()
+
+    # émettre ALSN avec adresse inconnue pour l'instant
+    emit_op_arg(OP.ALSN, 0)
+    # mémoriser la position de l'argument de ALSN dans PILOP
+    PILOP.append(len(P_CODE) - 1)
+
+    attendre(T_UNILEX.motcle, "FAIRE")
+
+    # génère le code de l'instruction/bloc
+    INSTRUCTION()
+
+    # émettre ALLE vers le début de la boucle
+    adr_debut = PILOP.pop()   # position argument ALSN (dépiler)
+    adr_tantque = PILOP.pop() # adresse début boucle (dépiler)
+
+    emit_op_arg(OP.ALLE, adr_tantque)
+
+    # patcher l'argument de ALSN avec l'adresse courante (sortie de boucle)
+    patch(adr_debut, len(P_CODE))
+
+
+    def INST_COND():
+    attendre(T_UNILEX.motcle, "SI")
+
+    # génère le code de la condition
+    EXP()
+
+    # émettre ALSN avec adresse inconnue
+    emit_op_arg(OP.ALSN, 0)
+    pos_alsn = len(P_CODE) - 1  # position de l'argument de ALSN
+
+    attendre(T_UNILEX.motcle, "ALORS")
+
+    # génère le code du bloc ALORS
+    INST_NON_COND()
+
+    if est_motcle("SINON"):
+        # émettre ALLE pour sauter le bloc SINON (adresse inconnue)
+        emit_op_arg(OP.ALLE, 0)
+        pos_alle = len(P_CODE) - 1  # position de l'argument de ALLE
+
+        # patcher ALSN : si condition nulle → sauter ici (début du SINON)
+        patch(pos_alsn, len(P_CODE))
+
+        avancer()  # consommer SINON
+
+        # génère le code du bloc SINON
+        INSTRUCTION()
+
+        # patcher ALLE : fin du SINON
+        patch(pos_alle, len(P_CODE))
+
+    else:
+        # pas de SINON : patcher ALSN directement avec l'adresse courante
+        patch(pos_alsn, len(P_CODE))
 
 def AFFECTATION():
     # AFFECTATION ==> IDENT := EXP
@@ -877,6 +956,14 @@ def creer_fichier_code(nom_prog: str, fichier_source: str):
                     i += 1
                 f.write(" FINC\n")
                 i += 1
+            elif op == OP.ALLE:
+                arg = P_CODE[i + 1]
+                f.write(f"{name} {arg}\n")
+                i += 2
+            elif op == OP.ALSN:
+                arg = P_CODE[i + 1]
+                f.write(f"{name} {arg}\n")
+                i += 2
             else:
                 f.write(f"{name}\n")
                 i += 1
@@ -919,6 +1006,16 @@ def afficher_pcode():
 
             i += 1
 
+        elif op == OP.ALLE:
+            arg = P_CODE[i + 1]
+            print(f"{name} {arg}")
+            i += 2
+
+        elif op == OP.ALSN:
+            arg = P_CODE[i + 1]
+            print(f"{name} {arg}")
+            i += 2
+            
         else:
 
             print(nom)
@@ -1024,6 +1121,16 @@ def interpreter():
         elif op == OP.STOP:
             break
 
+        elif op == OP.ALLE:
+            arg = P_CODE[co + 1]
+            co = arg
+
+        elif op == OP.ALSN:
+            arg = P_CODE[co + 1]
+            if arg == 0:
+                co = len(P_CODE)
+            else:
+                co += 2
         else:
             raise RuntimeError(f"opcode inconnu: {op}")
 

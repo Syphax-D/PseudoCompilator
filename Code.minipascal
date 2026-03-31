@@ -1,12 +1,11 @@
 PROGRAMME myApp; {tgggfk}
-CONST 
-	x = 'a',
-	b = 2; 
 VAR
-	z, t;
+	i;
 DEBUT
-	ECRIRE('Type a number: ');
-	LIRE(t);
-	z := x * b * 2;
-	ECRIRE('Your number multiplied by 4 is: ', z)
+	i := 10;
+	TANTQUE i > 1 FAIRE
+    DEBUT
+        ECRIRE(i, ' ');
+        i := i - 1
+    FIN
 FIN.
