@@ -7,7 +7,6 @@ from enum import Enum
 # 1. TYPES
 
 class T_UNILEX(Enum):
-    # Enumération des unités lexicales du langage mini-Pascal
     motcle = 1
     ident = 2
     ent = 3
@@ -31,7 +30,6 @@ class T_UNILEX(Enum):
     aff = 21
 
 class TYPE_ERREUR(Enum):
-    
     LEXICAL = "LEXICALE"
     SYNTAXIQUE = "SYNTAXIQUE"
     SEMANTIQUE = "SEMANTIQUE"
@@ -39,10 +37,10 @@ class TYPE_ERREUR(Enum):
 
 # 2. CONSTANTES
 
-LONG_MAX_IDENT = 20      # Longueur maximale d'un identificateur
-LONG_MAX_CHAINE = 50     # Longueur maximale d'une chaîne de caractères
-NB_MOTS_RESERVES = 12     # Nombre de mots-clés réservés
-MAXINT = 32767           # Valeur maximale pour un entier (16 bits)
+LONG_MAX_IDENT = 20
+LONG_MAX_CHAINE = 50
+NB_MOTS_RESERVES = 12
+MAXINT = 32767
 
 
 # 3. STRUCTURE DE LA TABLE DES IDENTIFICATEURS
@@ -57,27 +55,23 @@ class EntreeIdent:
 
 class TableIdentificateurs:
     def __init__(self):
-        self.entrees = []  # Liste triée de pointeurs vers EntreeIdent
+        self.entrees = []
     
     def _recherche_dichotomique(self, nom: str):
         gauche = 0
         droite = len(self.entrees) - 1
-        
         while gauche <= droite:
             milieu = (gauche + droite) // 2
             nom_milieu = self.entrees[milieu].nom
-            
             if nom_milieu == nom:
                 return (True, milieu)
             elif nom_milieu < nom:
                 gauche = milieu + 1
             else:
                 droite = milieu - 1
-        
-        return (False, gauche)  # Non trouvé, position d'insertion = gauche
+        return (False, gauche)
     
     def rechercher(self, nom: str) -> bool:
-        """Vérifie si un identificateur existe dans la table."""
         trouve, _ = self._recherche_dichotomique(nom)
         return trouve
     
@@ -87,7 +81,6 @@ class TableIdentificateurs:
             self.entrees.insert(pos, EntreeIdent(nom))
     
     def afficher(self):
-        """Affiche le contenu trié de la table des identificateurs."""
         print("\n" + "=" * 70)
         print(f"TABLE DES IDENTIFICATEURS ({len(self.entrees)} identificateurs)")
         print("=" * 70)
@@ -103,22 +96,12 @@ class TableIdentificateurs:
 
 # 4. VARIABLES GLOBALES
 
-# Fichier texte contenant le programme source
 SOURCE = None
-
-# Dernier caractère lu dans le fichier source
 CARLU = ''
-
-# Dernier nombre entier lu
 NOMBRE = 0
-
-# Dernier identificateur/mot-clé/chaîne lu
 CHAINE = ''
-
-# Numéro de la ligne courante dans le fichier source
 NUM_LIGNE = 1
 
-# Tableau des mots-clés réservés
 TABLE_MOTS_RESERVES = [
     'ALORS',
     'CONST',
@@ -140,11 +123,8 @@ TABLE_IDENT = TableIdentificateurs()
 # 5. FONCTIONS DE L'ANALYSEUR LEXICAL
 
 def ERREUR(type_erreur: TYPE_ERREUR, message: str):
-
     global NUM_LIGNE
-
     print(f"\nERREUR {type_erreur.value} LIGNE {NUM_LIGNE}")
-
     sys.exit(1)
 
 def LIRE_CAR():
@@ -152,7 +132,6 @@ def LIRE_CAR():
     CARLU = SOURCE.read(1)
     if CARLU == '\n':
         NUM_LIGNE += 1
-
 
 def SAUTER_SEPARATEURS():
     global CARLU
@@ -178,7 +157,6 @@ def SAUTER_SEPARATEURS():
         else:
             break
 
-
 def RECO_ENTIER():
     global CARLU, NOMBRE
     valeur = 0
@@ -192,7 +170,6 @@ def RECO_ENTIER():
         valeur += chiffre
         LIRE_CAR()
     NOMBRE = valeur
-
 
 def RECO_CHAINE():
     global CARLU, CHAINE
@@ -219,15 +196,10 @@ def RECO_CHAINE():
             LIRE_CAR()
     return T_UNILEX.ch
 
-
 def RECO_IDENT_OU_MOT_RESERVE():
-    
     global CARLU, CHAINE, TABLE_IDENT
-    
     CHAINE = ''
     longueur = 0
-    
-    # Lecture de l'identificateur/mot-clé
     while ('A' <= CARLU <= 'Z') or ('a' <= CARLU <= 'z') or ('0' <= CARLU <= '9') or CARLU == '_':
         if 'a' <= CARLU <= 'z':
             car_maj = chr(ord(CARLU) - 32)
@@ -238,7 +210,6 @@ def RECO_IDENT_OU_MOT_RESERVE():
             longueur += 1
         LIRE_CAR()
     
-    # Recherche dichotomique dans les mots réservés
     def EST_UN_MOT_RESERVE():
         gauche = 0
         droite = NB_MOTS_RESERVES - 1
@@ -258,7 +229,6 @@ def RECO_IDENT_OU_MOT_RESERVE():
         if not TABLE_IDENT.rechercher(CHAINE):
             TABLE_IDENT.ajouter(CHAINE)
         return T_UNILEX.ident
-
 
 def RECO_SYMB():
     global CARLU
@@ -311,7 +281,6 @@ def RECO_SYMB():
     else:
         ERREUR(TYPE_ERREUR.LEXICAL, "caractère illégal")
 
-
 def ANALEX():
     global CARLU
     SAUTER_SEPARATEURS()
@@ -325,10 +294,9 @@ def ANALEX():
     elif CARLU in [',', ';', '.', ':', '(', ')', '<', '>', '=', '+', '-', '*', '/']:
         return RECO_SYMB()
     elif CARLU == '':
-        return None   # fin normale du fichier
+        return None
     else:
         ERREUR(TYPE_ERREUR.LEXICAL, "caractère illégal")
-
 
 def INITIALISER(chemin_fichier):
     global SOURCE, CARLU, NUM_LIGNE, TABLE_MOTS_RESERVES, TABLE_IDENT
@@ -339,17 +307,21 @@ def INITIALISER(chemin_fichier):
         print(f"ERREUR: Fichier '{chemin_fichier}' non trouvé", file=sys.stderr)
         sys.exit(1)
     TABLE_MOTS_RESERVES = [
+        'ALORS',
         'CONST',
         'DEBUT',
         'ECRIRE',
+        'FAIRE',
         'FIN',
         'LIRE',
         'PROGRAMME',
+        'SI',
+        'SINON',
+        'TANTQUE',
         'VAR'
     ]
-    TABLE_IDENT = TableIdentificateurs()  # Réinitialiser la table
+    TABLE_IDENT = TableIdentificateurs()
     LIRE_CAR()
-
 
 def TERMINER():
     global SOURCE
@@ -358,95 +330,17 @@ def TERMINER():
         SOURCE = None
 
 
-# 6. PROGRAMME PRINCIPAL
-
-# if __name__ == "__main__":
-#     # Chemin du fichier source mini-Pascal
-#     CHEMIN_SOURCE = r"C:\Users\User\PseudoCompilator\Code.minipascal"
-    
-#     # Initialisation
-#     INITIALISER(CHEMIN_SOURCE)
-    
-#     print("=" * 70)
-#     print("ANALYSE LEXICALE DU PROGRAMME MINI-PASCAL")
-#     print("=" * 70)
-#     print(f"{'LIGNE':<8} {'UNILEX':<15} {'VALEUR':<40}")
-#     print("-" * 70)
-    
-#     # Analyse lexicale complète
-#     while True:
-#         unilex = ANALEX()
-        
-#         # Affichage des tokens reconnus
-#         if unilex == T_UNILEX.motcle:
-#             print(f"{NUM_LIGNE:<8} MOTCLE          {CHAINE:<40}")
-#         elif unilex == T_UNILEX.ident:
-#             print(f"{NUM_LIGNE:<8} IDENT          {CHAINE:<40}")
-#         elif unilex == T_UNILEX.ent:
-#             print(f"{NUM_LIGNE:<8} ENT            {NOMBRE:<40}")
-#         elif unilex == T_UNILEX.ch:
-#             print(f"{NUM_LIGNE:<8} CH             '{CHAINE}'{' ' * (38 - len(CHAINE))}")
-#         elif unilex == T_UNILEX.virg:
-#             print(f"{NUM_LIGNE:<8} VIRG           ','{' ' * 37}")
-#         elif unilex == T_UNILEX.ptvirg:
-#             print(f"{NUM_LIGNE:<8} PTVIRG         ';'{' ' * 37}")
-#         elif unilex == T_UNILEX.point:
-#             print(f"{NUM_LIGNE:<8} POINT          '.'{' ' * 37}")
-#             break
-#         elif unilex == T_UNILEX.deuxpts:
-#             print(f"{NUM_LIGNE:<8} DEUXPTS        ':'{' ' * 37}")
-#         elif unilex == T_UNILEX.parouv:
-#             print(f"{NUM_LIGNE:<8} PAROUV         '('{' ' * 37}")
-#         elif unilex == T_UNILEX.parfer:
-#             print(f"{NUM_LIGNE:<8} PARFER         ')'{' ' * 37}")
-#         elif unilex == T_UNILEX.inf:
-#             print(f"{NUM_LIGNE:<8} INF            '<'{' ' * 37}")
-#         elif unilex == T_UNILEX.sup:
-#             print(f"{NUM_LIGNE:<8} SUP            '>'{' ' * 37}")
-#         elif unilex == T_UNILEX.eg:
-#             print(f"{NUM_LIGNE:<8} EG             '='{' ' * 37}")
-#         elif unilex == T_UNILEX.plus:
-#             print(f"{NUM_LIGNE:<8} PLUS           '+'{' ' * 37}")
-#         elif unilex == T_UNILEX.moins:
-#             print(f"{NUM_LIGNE:<8} MOINS          '-'{' ' * 37}")
-#         elif unilex == T_UNILEX.mult:
-#             print(f"{NUM_LIGNE:<8} MULT           '*'{' ' * 37}")
-#         elif unilex == T_UNILEX.divi:
-#             print(f"{NUM_LIGNE:<8} DIVI           '/'{' ' * 37}")
-#         elif unilex == T_UNILEX.infe:
-#             print(f"{NUM_LIGNE:<8} INFE           '<='{' ' * 36}")
-#         elif unilex == T_UNILEX.supe:
-#             print(f"{NUM_LIGNE:<8} SUPE           '>='{' ' * 36}")
-#         elif unilex == T_UNILEX.diff:
-#             print(f"{NUM_LIGNE:<8} DIFF           '<>'{' ' * 35}")
-#         elif unilex == T_UNILEX.aff:
-#             print(f"{NUM_LIGNE:<8} AFF            ':='{' ' * 35}")
-    
-#     print("~" * 70)
-#     print("Analyse lexicale terminée avec succès")
-#     print("~" * 70)
-    
-#     # ~~~~AFFICHAGE DE LA TABLE DES IDENTIFICATEURS~~~~
-#     TABLE_IDENT.afficher()
-    
-#     TERMINER()
-
-
 # PARTIE 3 : SYNTAXE / SEMANTIQUE / GEN CODE / INTERPRETEUR
 
-
 from dataclasses import dataclass
-
-# TABLE DES SYMBOLES (on enrichit ton EntreeIdent)
-
 
 @dataclass
 class Symbole:
     nom: str
-    genre: str          # "var" ou "const"
-    typc: int           # 0 = entier, 1 = chaine
-    adr: int = -1       # adresse si var
-    val: int = 0        # valeur si const entier, ou index chaine si const chaine
+    genre: str
+    typc: int
+    adr: int = -1
+    val: int = 0
 
 
 class TableSymboles:
@@ -467,22 +361,16 @@ class TableSymboles:
             yield self.map[k]
 
 def afficher_table_symboles():
-
     print("\n" + "="*60)
     print("TABLE DES SYMBOLES")
     print("="*60)
-
     print(f"{'Nom':<10}{'Genre':<10}{'Type':<10}{'Adr':<6}{'Val'}")
-
     for s in SYM.items_tries():
-
         typ = "ENTIER" if s.typc == 0 else "CHAINE"
-
         print(f"{s.nom:<10}{s.genre:<10}{typ:<10}{s.adr:<6}{s.val}")
 
 
 # OPCODES
-
 
 class OP:
     ADDI = 0
@@ -512,18 +400,13 @@ OPNAME = {
 
 # VARIABLES GLOBALES PARTIE
 
-
 UNILEX = None
 SYM = TableSymboles()
-
 DERNIERE_ADRESSE_VAR_GLOB = -1
-
 VAL_DE_CONST_CHAINE = [""]
 NB_CONST_CHAINE = 0
-
 P_CODE = []
 PILOP = []
-
 NOM_FICHIER_SOURCE = ""
 
 
@@ -534,7 +417,7 @@ def avancer():
     UNILEX = ANALEX()
     if UNILEX is None:
         UNILEX = T_UNILEX.point
-        
+
 def erreur_syn(msg: str):
     ERREUR(TYPE_ERREUR.SYNTAXIQUE, msg)
 
@@ -569,15 +452,17 @@ def emit_ecrc_string(s: str):
         P_CODE.append(ord(ch))
     emit(OP.FINC)
 
+def patch(pos: int, val: int):
+    """Corrige l'argument d'une instruction déjà émise à la position pos."""
+    P_CODE[pos] = val
+
 
 # SEMANTIQUE
 
 def definir_constante(nom: str, token_val: T_UNILEX):
     global NB_CONST_CHAINE, VAL_DE_CONST_CHAINE
-
     if SYM.existe(nom):
         erreur_sem(f"identificateur déjà déclaré: {nom}")
-
     if token_val == T_UNILEX.ent:
         SYM.ajouter(Symbole(nom=nom, genre="const", typc=0, val=NOMBRE))
     elif token_val == T_UNILEX.ch:
@@ -615,93 +500,67 @@ def exiger_entier(sym: Symbole, contexte: str):
 
 # PARSER
 
-
 def PROG():
-    # PROG ==> PROGRAMME IDENT ; [DECL_CONST] [DECL_VAR] BLOC .
     attendre(T_UNILEX.motcle, "PROGRAMME")
-
     if UNILEX != T_UNILEX.ident:
         erreur_syn("identificateur du programme attendu")
     nom_prog = CHAINE
     avancer()
-
     attendre(T_UNILEX.ptvirg)
-
     if est_motcle("CONST"):
         DECL_CONST()
-
     if est_motcle("VAR"):
         DECL_VAR()
-
     BLOC()
-
     attendre(T_UNILEX.point)
-
     emit(OP.STOP)
-
     return nom_prog
 
 def DECL_CONST():
-    # DECL_CONST ==> CONST IDENT = (ENT,CH) { , IDENT = (ENT,CH) } ;
     attendre(T_UNILEX.motcle, "CONST")
-
     if UNILEX != T_UNILEX.ident:
         erreur_syn("identificateur attendu après CONST")
-
     while True:
         nom = CHAINE
         avancer()
-
         attendre(T_UNILEX.eg)
-
         if UNILEX not in (T_UNILEX.ent, T_UNILEX.ch):
             erreur_syn("ENT ou CH attendu dans déclaration de constante")
         token_val = UNILEX
         definir_constante(nom, token_val)
         avancer()
-
         if UNILEX == T_UNILEX.virg:
             avancer()
             if UNILEX != T_UNILEX.ident:
                 erreur_syn("identificateur attendu après ',' dans CONST")
             continue
         break
-
     attendre(T_UNILEX.ptvirg)
 
 def DECL_VAR():
-    # DECL_VAR ==> VAR IDENT { , IDENT } ;
     attendre(T_UNILEX.motcle, "VAR")
-
     if UNILEX != T_UNILEX.ident:
         erreur_syn("identificateur attendu après VAR")
-
     while True:
         nom = CHAINE
         definir_variable(nom)
         avancer()
-
         if UNILEX == T_UNILEX.virg:
             avancer()
             if UNILEX != T_UNILEX.ident:
                 erreur_syn("identificateur attendu après ',' dans VAR")
             continue
         break
-
     attendre(T_UNILEX.ptvirg)
 
 def BLOC():
-    # BLOC ==> DEBUT INSTRUCTION { ; INSTRUCTION } FIN
     attendre(T_UNILEX.motcle, "DEBUT")
-
     INSTRUCTION()
-
     while UNILEX == T_UNILEX.ptvirg:
         avancer()
         if est_motcle("FIN"):
             break
         INSTRUCTION()
-
     attendre(T_UNILEX.motcle, "FIN")
 
 def INSTRUCTION():
@@ -724,8 +583,8 @@ def INST_NON_COND():
     else:
         erreur_syn("instruction attendue (IDENT, LIRE, ECRIRE, DEBUT ou TANTQUE)")
 
-        def INST_REPE():
-    # mémoriser l'adresse de début dans PILOP
+def INST_REPE():
+    # mémoriser l'adresse de début de la boucle
     PILOP.append(len(P_CODE))
 
     attendre(T_UNILEX.motcle, "TANTQUE")
@@ -735,7 +594,7 @@ def INST_NON_COND():
 
     # émettre ALSN avec adresse inconnue pour l'instant
     emit_op_arg(OP.ALSN, 0)
-    # mémoriser la position de l'argument de ALSN dans PILOP
+    # mémoriser la position de l'argument de ALSN
     PILOP.append(len(P_CODE) - 1)
 
     attendre(T_UNILEX.motcle, "FAIRE")
@@ -743,17 +602,17 @@ def INST_NON_COND():
     # génère le code de l'instruction/bloc
     INSTRUCTION()
 
-    # émettre ALLE vers le début de la boucle
-    adr_debut = PILOP.pop()   # position argument ALSN (dépiler)
-    adr_tantque = PILOP.pop() # adresse début boucle (dépiler)
+    # dépiler : position arg ALSN et adresse début boucle
+    adr_debut = PILOP.pop()
+    adr_tantque = PILOP.pop()
 
+    # saut inconditionnel vers le début de la boucle
     emit_op_arg(OP.ALLE, adr_tantque)
 
-    # patcher l'argument de ALSN avec l'adresse courante (sortie de boucle)
+    # patcher ALSN avec l'adresse de sortie de boucle
     patch(adr_debut, len(P_CODE))
 
-
-    def INST_COND():
+def INST_COND():
     attendre(T_UNILEX.motcle, "SI")
 
     # génère le code de la condition
@@ -761,7 +620,7 @@ def INST_NON_COND():
 
     # émettre ALSN avec adresse inconnue
     emit_op_arg(OP.ALSN, 0)
-    pos_alsn = len(P_CODE) - 1  # position de l'argument de ALSN
+    pos_alsn = len(P_CODE) - 1
 
     attendre(T_UNILEX.motcle, "ALORS")
 
@@ -769,11 +628,11 @@ def INST_NON_COND():
     INST_NON_COND()
 
     if est_motcle("SINON"):
-        # émettre ALLE pour sauter le bloc SINON (adresse inconnue)
+        # émettre ALLE pour sauter le bloc SINON
         emit_op_arg(OP.ALLE, 0)
-        pos_alle = len(P_CODE) - 1  # position de l'argument de ALLE
+        pos_alle = len(P_CODE) - 1
 
-        # patcher ALSN : si condition nulle → sauter ici (début du SINON)
+        # patcher ALSN → début du bloc SINON
         patch(pos_alsn, len(P_CODE))
 
         avancer()  # consommer SINON
@@ -781,49 +640,36 @@ def INST_NON_COND():
         # génère le code du bloc SINON
         INSTRUCTION()
 
-        # patcher ALLE : fin du SINON
+        # patcher ALLE → après le bloc SINON
         patch(pos_alle, len(P_CODE))
 
     else:
-        # pas de SINON : patcher ALSN directement avec l'adresse courante
+        # pas de SINON → patcher ALSN directement
         patch(pos_alsn, len(P_CODE))
 
 def AFFECTATION():
-    # AFFECTATION ==> IDENT := EXP
     if UNILEX != T_UNILEX.ident:
         erreur_syn("identificateur attendu en affectation")
-
     nom = CHAINE
     s = exiger_var(nom)
     exiger_entier(s, "affectation")
-
     emit_op_arg(OP.EMPI, s.adr)
-
     avancer()
-    attendre(T_UNILEX.aff)      # ':='
-
-    # EXP pousse sa valeur sur la pile d'exécution
+    attendre(T_UNILEX.aff)
     EXP()
-
-    # puis AFFE consomme (valeur, adresse)
     emit(OP.AFFE)
 
 def LECTURE():
-    # LECTURE ==> LIRE ( IDENT { , IDENT } )
     attendre(T_UNILEX.motcle, "LIRE")
     attendre(T_UNILEX.parouv)
-
     if UNILEX != T_UNILEX.ident:
         erreur_syn("identificateur attendu dans LIRE(")
-
     while True:
         nom = CHAINE
         s = exiger_var(nom)
         exiger_entier(s, "lecture")
-
         emit_op_arg(OP.EMPI, s.adr)
         emit(OP.LIRE)
-
         avancer()
         if UNILEX == T_UNILEX.virg:
             avancer()
@@ -831,29 +677,22 @@ def LECTURE():
                 erreur_syn("identificateur attendu après ',' dans LIRE")
             continue
         break
-
     attendre(T_UNILEX.parfer)
 
 def ECRITURE():
-    # ECRITURE ==> ECRIRE ( [ECR_EXP { , ECR_EXP }] )
     attendre(T_UNILEX.motcle, "ECRIRE")
     attendre(T_UNILEX.parouv)
-
-    # cas ECRIRE() => saut de ligne
     if UNILEX == T_UNILEX.parfer:
         avancer()
         emit(OP.ECRL)
         return
-
     ECR_EXP()
     while UNILEX == T_UNILEX.virg:
         avancer()
         ECR_EXP()
-
     attendre(T_UNILEX.parfer)
 
 def ECR_EXP():
-    # ECR_EXP ==> EXP , CH
     if UNILEX == T_UNILEX.ch:
         emit_ecrc_string(CHAINE)
         avancer()
@@ -886,69 +725,53 @@ def OP_BIN():
     avancer()
 
 def TERME():
-    # TERME ==> ENT , IDENT , ( EXP ) , - TERME
     if UNILEX == T_UNILEX.ent:
         emit_op_arg(OP.EMPI, NOMBRE)
         avancer()
         return
-
     if UNILEX == T_UNILEX.ident:
         nom = CHAINE
         s = exiger_decl(nom)
         exiger_entier(s, "expression")
-
         if s.genre == "var":
             emit_op_arg(OP.EMPI, s.adr)
             emit(OP.CONT)
         else:
             emit_op_arg(OP.EMPI, s.val)
-
         avancer()
         return
-
     if UNILEX == T_UNILEX.parouv:
         avancer()
         EXP()
         attendre(T_UNILEX.parfer)
         return
-
     if UNILEX == T_UNILEX.moins:
-        # unary -
         avancer()
         TERME()
         emit(OP.MOIN)
         return
-
     erreur_syn("terme attendu (ENT, IDENT, '(', ou '-')")
 
 
-#é FICHIER .COD
-
+# FICHIER .COD
 
 def creer_fichier_code(nom_prog: str, fichier_source: str):
-    
     base = fichier_source
     if base.lower().endswith(".mp") or base.lower().endswith(".minipascal") or base.lower().endswith(".txt"):
         base = base.rsplit(".", 1)[0]
     path = base + ".COD"
-
     i = 0
     with open(path, "w", encoding="utf-8") as f:
-        # 1 mot réservé pour les variables globales
-        #nb de variables = DERNIERE_ADRESSE_VAR_GLOB + 1
         nb_vars = DERNIERE_ADRESSE_VAR_GLOB + 1
         f.write(f"{nb_vars}\n")
-
         while i < len(P_CODE):
             op = P_CODE[i]
             name = OPNAME.get(op, f"OP_{op}")
-
             if op == OP.EMPI:
                 arg = P_CODE[i+1]
                 f.write(f"{name} {arg}\n")
                 i += 2
             elif op == OP.ECRC:
-                # écrire en format: ECRC / FINC
                 f.write("ECRC ")
                 i += 1
                 while i < len(P_CODE) and P_CODE[i] != OP.FINC:
@@ -956,80 +779,50 @@ def creer_fichier_code(nom_prog: str, fichier_source: str):
                     i += 1
                 f.write(" FINC\n")
                 i += 1
-            elif op == OP.ALLE:
-                arg = P_CODE[i + 1]
-                f.write(f"{name} {arg}\n")
-                i += 2
-            elif op == OP.ALSN:
+            elif op in (OP.ALLE, OP.ALSN):
                 arg = P_CODE[i + 1]
                 f.write(f"{name} {arg}\n")
                 i += 2
             else:
                 f.write(f"{name}\n")
                 i += 1
-
     print(f"[OK] Fichier code généré: {path}")
 
 
 # INTERPRETEUR MACHINE VIRTUELLE
 
-
 def afficher_pcode():
-
     print("\n" + "="*60)
     print("P_CODE GENERE")
     print("="*60)
-
     i = 0
-
     while i < len(P_CODE):
-
         op = P_CODE[i]
         nom = OPNAME.get(op, str(op))
-
         if op == OP.EMPI:
-
             print(nom, P_CODE[i+1])
             i += 2
-
         elif op == OP.ECRC:
-
             texte = ""
             i += 1
-
             while P_CODE[i] != OP.FINC:
-
                 texte += chr(P_CODE[i])
                 i += 1
-
             print("ECRC", texte)
-
             i += 1
-
-        elif op == OP.ALLE:
+        elif op in (OP.ALLE, OP.ALSN):
             arg = P_CODE[i + 1]
-            print(f"{name} {arg}")
+            print(f"{nom} {arg}")
             i += 2
-
-        elif op == OP.ALSN:
-            arg = P_CODE[i + 1]
-            print(f"{name} {arg}")
-            i += 2
-            
         else:
-
             print(nom)
             i += 1
 
 def interpreter():
-    # mémoire variables globales
     nb_vars = DERNIERE_ADRESSE_VAR_GLOB + 1
     MEMVAR = [0] * max(nb_vars, 1)
-
-    # pile d'exécution
     PILEX = [0] * 10000
     SOM = -1
-
     co = 0
 
     def pop():
@@ -1054,45 +847,37 @@ def interpreter():
             b = pop(); a = pop()
             push(a + b)
             co += 1
-
         elif op == OP.SOUS:
             b = pop(); a = pop()
             push(a - b)
             co += 1
-
         elif op == OP.MULT:
             b = pop(); a = pop()
             push(a * b)
             co += 1
-
         elif op == OP.DIVI:
             b = pop(); a = pop()
             if b == 0:
                 raise RuntimeError("division par zéro")
             push(a // b)
             co += 1
-
         elif op == OP.MOIN:
             a = pop()
             push(-a)
             co += 1
-
         elif op == OP.EMPI:
             arg = P_CODE[co + 1]
             push(arg)
             co += 2
-
         elif op == OP.CONT:
             adr = pop()
             push(MEMVAR[adr])
             co += 1
-
         elif op == OP.AFFE:
             val = pop()
             adr = pop()
             MEMVAR[adr] = val
             co += 1
-
         elif op == OP.LIRE:
             adr = pop()
             try:
@@ -1101,51 +886,41 @@ def interpreter():
                 raise RuntimeError("entrée invalide")
             MEMVAR[adr] = v
             co += 1
-
         elif op == OP.ECRL:
             print()
             co += 1
-
         elif op == OP.ECRE:
             val = pop()
             print(val, end="")
             co += 1
-
         elif op == OP.ECRC:
             co += 1
             while P_CODE[co] != OP.FINC:
                 print(chr(P_CODE[co]), end="")
                 co += 1
             co += 1
-
         elif op == OP.STOP:
             break
-
         elif op == OP.ALLE:
-            arg = P_CODE[co + 1]
-            co = arg
-
+            co = P_CODE[co + 1]
         elif op == OP.ALSN:
             arg = P_CODE[co + 1]
-            if arg == 0:
-                co = len(P_CODE)
+            val = pop()        # dépiler la valeur testée
+            if val == 0:       # si nul → sauter
+                co = arg
             else:
                 co += 2
         else:
             raise RuntimeError(f"opcode inconnu: {op}")
 
 
-
 # POINT D'ENTREE COMPILATION + EXECUTION
-
 
 def compiler_et_executer(fichier_source: str, executer=True, generer_cod=True):
     global NOM_FICHIER_SOURCE, SYM, DERNIERE_ADRESSE_VAR_GLOB, VAL_DE_CONST_CHAINE, NB_CONST_CHAINE
     global P_CODE, PILOP, UNILEX
 
     NOM_FICHIER_SOURCE = fichier_source
-
-    # reint
     SYM = TableSymboles()
     DERNIERE_ADRESSE_VAR_GLOB = -1
     VAL_DE_CONST_CHAINE = [""]
@@ -1154,26 +929,19 @@ def compiler_et_executer(fichier_source: str, executer=True, generer_cod=True):
     PILOP = []
     print("Fichier analysé :", fichier_source)
 
-    # init lexer
     INITIALISER(fichier_source)
-    avancer()  # UNILEX = 1er token
+    avancer()
 
-    # parse + gen code
     nom_prog = PROG()
-
     TERMINER()
 
-    # fichier .COD
     if generer_cod:
         creer_fichier_code(nom_prog, fichier_source)
 
-    # exécution
     if executer:
         interpreter()
 
     print("\nCompilation terminée.")
-
-
 
 
 if __name__ == "__main__":
@@ -1188,52 +956,36 @@ if __name__ == "__main__":
     print("-"*50)
 
     while True:
-
         tok = ANALEX()
-
         if tok is None:
             break
-
         if tok == T_UNILEX.motcle:
             print(NUM_LIGNE, " MOTCLE ", CHAINE)
-
         elif tok == T_UNILEX.ident:
             print(NUM_LIGNE, " IDENT ", CHAINE)
-
         elif tok == T_UNILEX.ent:
             print(NUM_LIGNE, " ENT ", NOMBRE)
-
         elif tok == T_UNILEX.ch:
             print(NUM_LIGNE, " CH ", CHAINE)
-
         elif tok == T_UNILEX.aff:
             print(NUM_LIGNE, " :=")
-
         elif tok == T_UNILEX.plus:
             print(NUM_LIGNE, " +")
-
         elif tok == T_UNILEX.mult:
             print(NUM_LIGNE, " *")
-
         elif tok == T_UNILEX.ptvirg:
             print(NUM_LIGNE, " ;")
-
         elif tok == T_UNILEX.virg:
             print(NUM_LIGNE, " ,")
-
         elif tok == T_UNILEX.parouv:
             print(NUM_LIGNE, " (")
-
         elif tok == T_UNILEX.parfer:
             print(NUM_LIGNE, " )")
-
         elif tok == T_UNILEX.point:
             print(NUM_LIGNE, " .")
             break
 
     TERMINER()
-
-
 
     compiler_et_executer(
         CHEMIN_SOURCE,
@@ -1241,20 +993,13 @@ if __name__ == "__main__":
         generer_cod=True
     )
 
-
     print("\n~~~~~~~~~~~~~ Table des symboles ~~~~~~~~~~~~~~\n")
-
     afficher_table_symboles()
 
-
     print("\n~~~~~~~~~~~~~ P_CODE ~~~~~~~~~~~~~~\n")
-
     afficher_pcode()
 
-
     print("\n~~~~~~~~~~~~~ Execution ~~~~~~~~~~~~~~\n")
-
     interpreter()
-
 
     print("\n~~~~~~~~~~~~~ FIN ~~~~~~~~~~~~~~\n")

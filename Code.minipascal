@@ -1,11 +1,23 @@
-PROGRAMME myApp; {tgggfk}
+PROGRAMME test;
 VAR
-	i;
+    i, n, somme;
 DEBUT
-	i := 10;
-	TANTQUE i > 1 FAIRE
+    ECRIRE('~~~ Test SI/ALORS/SINON ~~~');
+    ECRIRE('Entrez un nombre: ');
+    LIRE(n);
+    SI n ALORS
+        ECRIRE('Le nombre est non nul')
+    SINON
+        ECRIRE('Le nombre est nul');
+    ECRIRE();
+
+    ECRIRE('~~~ Test TANTQUE/FAIRE ~~~');
+    ECRIRE('Comptage de 1 a n: ');
+    i := 1;
+    TANTQUE n FAIRE
     DEBUT
         ECRIRE(i, ' ');
-        i := i - 1
-    FIN
+        n := n - 1;
+        i := i + 1;
+    FIN;
 FIN.

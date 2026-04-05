@@ -1,17 +1,38 @@
-2
-ECRC Type a number:  FINC
+3
+ECRC ~~~ Test SI/ALORS/SINON ~~~ FINC
+ECRC Entrez un nombre:  FINC
 EMPI 1
 LIRE
-EMPI 0
 EMPI 1
 CONT
-EMPI 2
-EMPI 2
-MULT
-MULT
+ALSN 82
+ECRC Le nombre est non nul FINC
+ALLE 101
+ECRC Le nombre est nul FINC
+ECRL
+ECRC ~~~ Test TANTQUE/FAIRE ~~~ FINC
+ECRC Comptage de 1 a n:  FINC
+EMPI 0
+EMPI 1
 AFFE
-ECRC Your number multiplied by 4 is:  FINC
+EMPI 1
+CONT
+ALSN 188
 EMPI 0
 CONT
 ECRE
+ECRC   FINC
+EMPI 1
+EMPI 1
+CONT
+EMPI 1
+SOUS
+AFFE
+EMPI 0
+EMPI 0
+CONT
+EMPI 1
+ADDI
+AFFE
+ALLE 156
 STOP
