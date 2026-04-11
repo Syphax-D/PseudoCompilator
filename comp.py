@@ -632,7 +632,7 @@ def INST_COND():
         emit_op_arg(OP.ALLE, 0)
         pos_alle = len(P_CODE) - 1
 
-        # patcher ALSN → début du bloc SINON
+        # patcher ALSN => début du bloc SINON
         patch(pos_alsn, len(P_CODE))
 
         avancer()  # consommer SINON
@@ -640,11 +640,11 @@ def INST_COND():
         # génère le code du bloc SINON
         INSTRUCTION()
 
-        # patcher ALLE → après le bloc SINON
+        # patcher ALLE => après le bloc SINON
         patch(pos_alle, len(P_CODE))
 
     else:
-        # pas de SINON → patcher ALSN directement
+        # pas de SINON => patcher ALSN directement
         patch(pos_alsn, len(P_CODE))
 
 def AFFECTATION():
@@ -906,7 +906,7 @@ def interpreter():
         elif op == OP.ALSN:
             arg = P_CODE[co + 1]
             val = pop()        # dépiler la valeur testée
-            if val == 0:       # si nul → sauter
+            if val == 0:       # si nul => sauter
                 co = arg
             else:
                 co += 2

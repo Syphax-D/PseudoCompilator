@@ -1,22 +1,24 @@
-PROGRAMME test;
+PROGRAMME test; {tgggfk}
 VAR
     i, n, somme;
 DEBUT
-    ECRIRE('~~~ Test SI/ALORS/SINON ~~~');
+    ECRIRE('~~~ Test SI/ALORS/SINON ~~~ ');
     ECRIRE('Entrez un nombre: ');
-    LIRE(n);
+    {LIRE(n);}
+    n := 10;
     SI n ALORS
         ECRIRE('Le nombre est non nul')
     SINON
         ECRIRE('Le nombre est nul');
     ECRIRE();
 
-    ECRIRE('~~~ Test TANTQUE/FAIRE ~~~');
+    ECRIRE('~~~ Test TANTQUE/FAIRE ~~~ ');
     ECRIRE('Comptage de 1 a n: ');
     i := 1;
     TANTQUE n FAIRE
     DEBUT
         ECRIRE(i, ' ');
+        ECRIRE();
         n := n - 1;
         i := i + 1;
     FIN;
